@@ -268,9 +268,10 @@ public class PurePursuitAuto extends LinearOpMode
         ArrayList<CatType_CurvePoint> simpleDrivePath = new ArrayList<>();
 
         CatHW_Vision.UltimateGoalPipeline.duckPosistion duckPos = robot.eyes.getDuckPos();
+        getMarker();
 
         simpleDrivePath.add(new CatType_CurvePoint(0, 30, 0));
-        simpleDrivePath.add(new CatType_CurvePoint(-4, 44, -90));
+        simpleDrivePath.add(new CatType_CurvePoint(-4, 44, 90));
         robot.drive.pursuitDrive(simpleDrivePath, .9, 15.0, 7);
         robot.drive.waitUntilDone();
 
@@ -312,21 +313,61 @@ public class PurePursuitAuto extends LinearOpMode
         }
         robot.robotWait(.5);
 
-        robot.drive.quickDrive(26,32,90,.9,5);
+        robot.drive.quickDrive(30,25,-90,.9,5);
+    }
+    public void getMarker(){
+        CatHW_Vision.UltimateGoalPipeline.duckPosistion duckPos = robot.eyes.getDuckPos();
+        double startPos = 0.69;
+        switch(duckPos){
+            case LEFT:
+                startPos = 0.606;
+                break;
+            case MIDDLE:
+                startPos = 0.662;
+                break;
+            case RIGHT:
+                startPos = 0.720;
+                break;
+
+        }
+        robot.jaws.setCapPos(startPos,0.7);
+        robot.jaws.setCapInOutPower(1.0);
+        robot.robotWait(1.7);
+        robot.jaws.setCapInOutPower(0);
+        robot.robotWait(0.2);
+        robot.jaws.setCapPos(startPos,0.78);
+        robot.robotWait(0.5);
+        robot.jaws.setCapPos(startPos,0.374);
+        robot.robotWait(0.5);
+        robot.jaws.setCapInOutPower(-1.0);
+        robot.robotWait(1.7);
+        robot.jaws.setCapInOutPower(0);
+        robot.jaws.setCapPos(.59,.34);
+        robot.robotWait(0.358);
+        robot.jaws.setCapPos(.59,.7);
+        robot.robotWait(.2);
+        robot.jaws.setCapInOutPower(1);
+        robot.robotWait(.1);
+        robot.jaws.setCapInOutPower(0);
+        robot.jaws.setCapPos(.59,.78);
+        robot.robotWait(.1);
+        robot.jaws.setCapPos(.7,.78);
+        robot.jaws.setCapInOutPower(1);
+        robot.robotWait(.3);
+        robot.jaws.setCapInOutPower(0);
+
+
+
     }
     public void redLeft(){
         /* Go! */
         ArrayList<CatType_CurvePoint> simpleDrivePath = new ArrayList<>();
         CatHW_Vision.UltimateGoalPipeline.duckPosistion duckPos = robot.eyes.getDuckPos();
-        if(duckPos == CatHW_Vision.UltimateGoalPipeline.duckPosistion.MIDDLE) {
-            simpleDrivePath.add(new CatType_CurvePoint(8, 0, 0));
-            simpleDrivePath.add(new CatType_CurvePoint(8, 33, 0));
-            simpleDrivePath.add(new CatType_CurvePoint(6, 38, -90));
-            simpleDrivePath.add(new CatType_CurvePoint(10, 38, -90));
-        }else {
-            simpleDrivePath.add(new CatType_CurvePoint(0, 33, 0));
-            simpleDrivePath.add(new CatType_CurvePoint(10, 38, -90));
-        }
+        getMarker();
+
+        simpleDrivePath.add(new CatType_CurvePoint(0, 33, 0));
+        simpleDrivePath.add(new CatType_CurvePoint(11.5, 38, -90));
+
 
         robot.drive.pursuitDrive(simpleDrivePath, .9, 15.0, 7);
         robot.drive.waitUntilDone();
@@ -375,7 +416,7 @@ public class PurePursuitAuto extends LinearOpMode
         simpleDrivePath.add(new CatType_CurvePoint(0, 30.5, 135));
         simpleDrivePath.add(new CatType_CurvePoint(-6, 31.5, 135));
 
-        robot.drive.pursuitDrive(simpleDrivePath, .9, 15.0, 3);
+        robot.drive.pursuitDrive(simpleDrivePath, .9, 15.0, 3.5);
 
         robot.drive.waitUntilDone();
 
@@ -399,7 +440,7 @@ public class PurePursuitAuto extends LinearOpMode
 
             robot.jaws.waitForLift();
             robot.jaws.dumpPos();
-            robot.robotWait(1);
+            robot.robotWait(.7);
             robot.jaws.unDump();
             robot.jaws.setLiftBottom(0.5);
             robot.drive.setLooseTolerance();
@@ -409,8 +450,8 @@ public class PurePursuitAuto extends LinearOpMode
 
             //Drive into warehouse
             simpleDrivePath.clear();
-            simpleDrivePath.add(new CatType_CurvePoint(-3, 4, 90));
-            simpleDrivePath.add(new CatType_CurvePoint(20, 2, 90));
+            simpleDrivePath.add(new CatType_CurvePoint(-3, 4, 95));
+            simpleDrivePath.add(new CatType_CurvePoint(20, 2, 100));
             simpleDrivePath.add(new CatType_CurvePoint(26, 4, 85));
 
             robot.drive.pursuitDrive(simpleDrivePath, .9, 7.0, 7);
@@ -435,10 +476,10 @@ public class PurePursuitAuto extends LinearOpMode
             //drive to dump position
             simpleDrivePath.clear();
             simpleDrivePath.add(new CatType_CurvePoint(18, 3, 90));
-            simpleDrivePath.add(new CatType_CurvePoint(0, 4, 90));
+            simpleDrivePath.add(new CatType_CurvePoint(-4, 4, 90));
             simpleDrivePath.add(new CatType_CurvePoint(-7, 32.5, 135));
 
-            robot.drive.pursuitDrive(simpleDrivePath, .9, 7.0, 7);
+            robot.drive.pursuitDrive(simpleDrivePath, .8, 7.0, 7);
             robot.drive.waitUntilDone();
             robot.jaws.setJawPower(0);
 

@@ -202,9 +202,9 @@ public class CatMotionProfile
             // Ramp up power.
             currentPower = maxPower * (currentTime / rampUpTime);
         }
-        Log.d("catbot",String.format("motion cur:%.2f %.2f tar:%.2f %.2f dto %.2f + %.2f dist:%.2f pow:%.2f min:%.2f calc:%.2f",
+       /* Log.d("catbot",String.format("motion cur:%.2f %.2f tar:%.2f %.2f dto %.2f + %.2f dist:%.2f pow:%.2f min:%.2f calc:%.2f",
                 curX,curY,pointOnLine.x, pointOnLine.y, distToPathEnd(pointOnLine),distanceBetween(currentPos, pointOnLine),
-                distanceToFinalTargetPoint,currentPower,minPower,calcMinPowerScale(curX, curY, curTheta)));
+                distanceToFinalTargetPoint,currentPower,minPower,calcMinPowerScale(curX, curY, curTheta)));*/
         // Checks to make sure we are within our minimum and maximum power ranges.
         if (currentPower < (minPower*calcMinPowerScale(curX, curY, curTheta)))
             currentPower = minPower*calcMinPowerScale(curX, curY, curTheta);

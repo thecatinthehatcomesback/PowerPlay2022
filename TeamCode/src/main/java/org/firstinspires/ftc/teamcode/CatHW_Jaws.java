@@ -193,10 +193,17 @@ public class CatHW_Jaws extends CatHW_Subsystem
         }
         return true;
     }
+    public void setCapPos(double lrPos, double vertPos){
+        capLRPos = lrPos;
+        capLR.setPosition(capLRPos);
+        capVerticalPos = vertPos;
+        capVertical.setPosition(capVerticalPos);
 
+
+    }
     public void capLRAdjust(double adjustment){
         if(capLRTimer.seconds() > 0.01) {
-            capLRPos += adjustment * Math.abs(adjustment)  * 0.015;
+            capLRPos += adjustment * Math.abs(adjustment)  * 0.01;
             if(capLRPos > 1.0){
                 capLRPos = 1.0;
             }else if(capLRPos < 0){
