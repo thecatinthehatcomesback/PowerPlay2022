@@ -117,7 +117,7 @@ public class EasyOpenCVExample extends LinearOpMode
         /*
          * An enum to define the ring position
          */
-        public enum duckPosition {
+        public enum conePosition {
             LEFT,
             MIDDLE,
             RIGHT,
@@ -140,16 +140,8 @@ public class EasyOpenCVExample extends LinearOpMode
          * The core values which define the location and size of the sample regions
          */
         static final Point REGION1_TOPLEFT_ANCHOR_POINT = new Point(245,150);
-        static final Point REGION2_TOPLEFT_ANCHOR_POINT = new Point(170,150);
-        static final Point REGION3_TOPLEFT_ANCHOR_POINT = new Point(80,150);
-        static final Point LEFT_TOPLEFT_ANCHOR_POINT = new Point(0,50);
-        static final Point RIGHT_TOPLEFT_ANCHOR_POINT = new Point(250,50);
 
 
-        static int REGION_WIDTH = regionWidth;
-        static int REGION_HEIGHT = regionHeight;
-
-        final int DUCK_THRESHOLD = 40;
 
         Point right_region1_pointA = new Point(
                 REGION1_TOPLEFT_ANCHOR_POINT.x,
@@ -158,89 +150,52 @@ public class EasyOpenCVExample extends LinearOpMode
                 REGION1_TOPLEFT_ANCHOR_POINT.x + regionWidth,
                 REGION1_TOPLEFT_ANCHOR_POINT.y + regionHeight);
 
-        Point middle_region2_pointA = new Point(
-                REGION2_TOPLEFT_ANCHOR_POINT.x,
-                REGION2_TOPLEFT_ANCHOR_POINT.y);
-        Point middle_region2_pointB = new Point(
-                REGION2_TOPLEFT_ANCHOR_POINT.x + regionWidth,
-                REGION2_TOPLEFT_ANCHOR_POINT.y+regionHeight);
-
-        Point left_region3_pointA = new Point(
-                REGION3_TOPLEFT_ANCHOR_POINT.x,
-                REGION3_TOPLEFT_ANCHOR_POINT.y);
-        Point left_region3_pointB = new Point(
-                REGION3_TOPLEFT_ANCHOR_POINT.x + regionWidth,
-                REGION3_TOPLEFT_ANCHOR_POINT.y+regionHeight);
-
-        Point topLeftRegionA = new Point(
-                LEFT_TOPLEFT_ANCHOR_POINT.x,
-                LEFT_TOPLEFT_ANCHOR_POINT.y);
-        Point topLeftRegionB = new Point(
-                LEFT_TOPLEFT_ANCHOR_POINT.x + regionWidth,
-                LEFT_TOPLEFT_ANCHOR_POINT.y + regionHeight);
-
-        Point topRightRegionA = new Point(
-                RIGHT_TOPLEFT_ANCHOR_POINT.x,
-                RIGHT_TOPLEFT_ANCHOR_POINT.y);
-        Point topRightRegionB = new Point(
-                RIGHT_TOPLEFT_ANCHOR_POINT.x + regionWidth,
-                RIGHT_TOPLEFT_ANCHOR_POINT.y + regionHeight);
-
-
-
-
-
         /*
          * Working variables
          */
         Mat region1_Cb;
-        Mat region2_Cb;
-        Mat region3_Cb;
 
-        Mat topLeft_Cb;
-        Mat topRight_Cb;
 
         Mat YCrCb = new Mat();
         Mat Cr = new Mat();
         Mat Cr2 = new Mat();
         Mat Cr3 = new Mat();
 
-        int avg1;
-        int avg2;
-        int avg3;
+        int avgRed;
+        int avgBlue;
+        int avgGreen;
 
         int topLeftAvg;
         int topRightAvg;
 
         Mat hsv = new Mat();
-        Scalar lowHSV1 = new Scalar(0, 100, 20); // lower bound HSV for red
-        Scalar highHSV1 = new Scalar(10,255,255); // higher bound HSV for red
+        Scalar redLowHSV1 = new Scalar(0, 100, 20); // lower bound HSV for red
+        Scalar redHighHSV1 = new Scalar(10,255,255); // higher bound HSV for red
 
-        Scalar lowHSV2 = new Scalar(160, 100, 20); // lower bound HSV for red
-        Scalar highHSV2 = new Scalar(179,255,255); // higher bound HSV for red
-        Scalar blueLowHSV = new Scalar(100,150,0);
-        Scalar blueHighHSV = new Scalar(140,255,255);
+        Scalar redLowHSV2 = new Scalar(160, 100, 20); // lower bound HSV for red
+        Scalar redHighHSV2 = new Scalar(179,255,255); // higher bound HSV for red
+
+        Scalar blueLowHSV = new Scalar(100,150,0); // lower bound HSV for blue
+        Scalar blueHighHSV = new Scalar(140,255,255); //higher bound HSV for blue
+
+        Scalar greenLowHSV = new Scalar(55,100,50); // lower bound HSV for green
+        Scalar greenHighHSV = new Scalar(65,220,255); //higher bound HSV for green
 
 
 
 
 
         // Volatile since accessed by OpMode thread w/o synchronization
-        private volatile duckPosition position = duckPosition.NONE;
+        private volatile conePosition position = conePosition.NONE;
         private volatile robotPos robotPosition = robotPos.NONE;
 
 
 
         /*
-         * This function takes the RGB frame, converts to YCrCb,
-         * and extracts the Cb channel to the 'Cb' variable
+         * This function takes the RGB frame, converts to HSV,
+         * and extracts the Cr channel to the 'Cr' variable
+         */
 
-        /*void inputToCb(Mat input)
-        {
-            Imgproc.cvtColor(input, YCrCb, Imgproc.COLOR_RGB2YCrCb);
-            Core.extractChannel(YCrCb, Cb, 0);
-            Imgproc.cvtColor(input,hsv, Imgproc.COLOR_RGB2HSV);
-        }*/
         void inputToCb(Mat input)
         {
             Imgproc.cvtColor(input, hsv, Imgproc.COLOR_RGB2HSV);
@@ -255,13 +210,6 @@ public class EasyOpenCVExample extends LinearOpMode
         {
             inputToCb(firstFrame);
             region1_Cb = Cr.submat(new Rect(right_region1_pointA, right_region1_pointB));
-            region2_Cb = Cr.submat(new Rect(middle_region2_pointA, middle_region2_pointB));
-            region3_Cb = Cr.submat(new Rect(left_region3_pointA,left_region3_pointB));
-            topLeft_Cb = Cr.submat(new Rect(topLeftRegionA,topLeftRegionB));
-            topRight_Cb = Cr.submat(new Rect(topRightRegionA,topLeftRegionB));
-
-
-
         }
 
         @Override
@@ -270,27 +218,19 @@ public class EasyOpenCVExample extends LinearOpMode
             right_region1_pointB.x = REGION1_TOPLEFT_ANCHOR_POINT.x + regionWidth;
             right_region1_pointB.y = REGION1_TOPLEFT_ANCHOR_POINT.y + regionHeight;
 
-            middle_region2_pointB.x = REGION2_TOPLEFT_ANCHOR_POINT.x + regionWidth;
-            middle_region2_pointB.y = REGION2_TOPLEFT_ANCHOR_POINT.y + regionHeight;
-
-            left_region3_pointB.x = REGION3_TOPLEFT_ANCHOR_POINT.x + regionWidth;
-            left_region3_pointB.y = REGION3_TOPLEFT_ANCHOR_POINT.y + regionHeight;
-
 
             inputToCb(input);
             Mat mat = new Mat();
 
             Mat thresh = new Mat();
 
-            Core.inRange(hsv,lowHSV1,highHSV1,Cr);
-            Core.inRange(hsv,lowHSV2,highHSV2,Cr);
-            avg1 = (int) Core.mean(region1_Cb).val[0];
-            avg2 = (int) Core.mean(region2_Cb).val[0];
-            avg3 = (int) Core.mean(region3_Cb).val[0];
-
-            topLeftAvg = (int) Core.mean(topLeft_Cb).val[0];
-
-            topRightAvg = (int) Core.mean(topRight_Cb).val[0];
+            Core.inRange(hsv, redLowHSV1, redHighHSV1,Cr);
+            Core.inRange(hsv, redLowHSV2, redHighHSV2,Cr);
+            avgRed = (int) Core.mean(region1_Cb).val[0];
+            Core.inRange(hsv,blueLowHSV,blueLowHSV,Cr);
+            avgBlue = (int) Core.mean(region1_Cb).val[0];
+            Core.inRange(hsv,greenHighHSV,greenLowHSV,Cr);
+            avgGreen = (int) Core.mean(region1_Cb).val[0];
 
 
 
@@ -302,43 +242,13 @@ public class EasyOpenCVExample extends LinearOpMode
                     BLUE, // The color the rectangle is drawn in
                     2); // Thickness of the rectangle lines
 
-            Imgproc.rectangle(
-                    input, // Buffer to draw on
-                    middle_region2_pointA, // First point which defines the rectangle
-                    middle_region2_pointB, // Second point which defines the rectangle
-                    BLUE, // The color the rectangle is drawn in
-                    2); // Negative thickness means solid fill
-
-            Imgproc.rectangle(
-                    input, // Buffer to draw on
-                    left_region3_pointA, // First point which defines the rectangle
-                    left_region3_pointB, // Second point which defines the rectangle
-                    BLUE, // The color the rectangle is drawn in
-                    2); // Negative thickness means solid fill
-
-            Imgproc.rectangle(
-                    input, // Buffer to draw on
-                    topLeftRegionA, // First point which defines the rectangle
-                    topLeftRegionB, // Second point which defines the rectangle
-                    BLUE, // The color the rectangle is drawn in
-                    2); // Negative thickness means solid fill
-
-            Imgproc.rectangle(
-                    input, // Buffer to draw on
-                    topRightRegionA, // First point which defines the rectangle
-                    topRightRegionB,// Second point which defines the rectangle
-                    BLUE, // The color the rectangle is drawn in
-                    2); // Negative thickness means solid fill
-
-
-
-            position = duckPosition.NONE; // Record our analysis
-            if(avg1 > avg2 && avg1 > avg3){
-                position = duckPosition.RIGHT;
-            }else if (avg2 > avg1 && avg2 > avg3){
-                position = duckPosition.MIDDLE;
-            }else if(avg3 > avg1 && avg3 > avg2){
-                position = duckPosition.LEFT;
+            position = conePosition.NONE; // Record our analysis
+            if(avgRed > avgBlue && avgRed > avgGreen){
+                position = conePosition.RIGHT;
+            }else if (avgBlue > avgRed && avgBlue > avgGreen){
+                position = conePosition.MIDDLE;
+            }else if(avgGreen > avgRed && avgGreen > avgBlue){
+                position = conePosition.LEFT;
             }
 
             robotPosition = robotPos.NONE;
@@ -351,9 +261,9 @@ public class EasyOpenCVExample extends LinearOpMode
             return input;
         }
 
-        public int avg1GetAnalysis()  {  return avg1;             }
-        public int avg2GetAnalysis()  {  return avg2;             }
-        public int avg3GetAnalysis()  {  return avg3;             }
+        public int avg1GetAnalysis()  {  return avgRed;             }
+        public int avg2GetAnalysis()  {  return avgBlue;             }
+        public int avg3GetAnalysis()  {  return avgGreen;             }
         public int getTopLeftAvg()    {  return topLeftAvg;       }
         public int getTopRightAvg()   {  return topRightAvg;      }
 
