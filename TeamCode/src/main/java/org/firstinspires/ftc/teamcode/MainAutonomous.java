@@ -1,8 +1,6 @@
 package org.firstinspires.ftc.teamcode;
 
 import com.acmerobotics.dashboard.FtcDashboard;
-import com.arcrobotics.ftclib.geometry.Pose2d;
-import com.arcrobotics.ftclib.geometry.Rotation2d;
 import com.qualcomm.hardware.rev.RevBlinkinLedDriver;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
@@ -33,12 +31,11 @@ import org.firstinspires.ftc.robotcore.external.Telemetry;
 
 @Autonomous(name="MainAutonomous", group="CatAuto")
 
-public class MainAutonomous extends LinearOpMode
-{
+public class MainAutonomous extends LinearOpMode {
 
-/* Declare OpMode members. */
+    /* Declare OpMode members. */
 
-    CatHW_Async robot  = new CatHW_Async();    // All the hardware classes init here.
+    CatHW_Async robot = new CatHW_Async();    // All the hardware classes init here.
     private ElapsedTime delayTimer = new ElapsedTime();
     private double timeDelay;
 
@@ -55,7 +52,7 @@ public class MainAutonomous extends LinearOpMode
         FtcDashboard dashboard = FtcDashboard.getInstance();
         Telemetry dashboardTelemetry = dashboard.getTelemetry();
 
-        robot.init(hardwareMap, this, false);
+        robot.init(hardwareMap, this);
 
 
 
@@ -91,15 +88,15 @@ public class MainAutonomous extends LinearOpMode
                     robot.isRedAlliance = true;
                     robot.isLeftAlliance = true;
 
-                } else if(robot.isRedAlliance && robot.isLeftAlliance) {
+                } else if (robot.isRedAlliance && robot.isLeftAlliance) {
 
                     robot.isLeftAlliance = true;
                     robot.isRedAlliance = false;
-                } else if(!robot.isRedAlliance && robot.isLeftAlliance){
+                } else if (!robot.isRedAlliance && robot.isLeftAlliance) {
 
                     robot.isLeftAlliance = false;
                     robot.isRedAlliance = false;
-                }else if(!robot.isRedAlliance && !robot.isLeftAlliance){
+                } else if (!robot.isRedAlliance && !robot.isLeftAlliance) {
 
                     robot.isLeftAlliance = false;
                     robot.isRedAlliance = true;
@@ -117,11 +114,11 @@ public class MainAutonomous extends LinearOpMode
             if (CatHW_Async.isRedAlliance && !CatHW_Async.isLeftAlliance) {
                 robot.lights.setDefaultColor(RevBlinkinLedDriver.BlinkinPattern.RED);
             } else if(CatHW_Async.isRedAlliance && CatHW_Async.isLeftAlliance) {
-                robot.lights.setDefaultColor(RevBlinkinLedDriver.BlinkinPattern.STROBE_RED);
+                robot.lights.setDefaultColor(RevBlinkinLedDriver.BlinkinPattern.HEARTBEAT_RED);
             }else if(!CatHW_Async.isRedAlliance && !CatHW_Async.isLeftAlliance) {
-                robot.lights.setDefaultColor(RevBlinkinLedDriver.BlinkinPattern.STROBE_BLUE);
-            }else if(!CatHW_Async.isRedAlliance && CatHW_Async.isLeftAlliance){
                 robot.lights.setDefaultColor(RevBlinkinLedDriver.BlinkinPattern.BLUE);
+            }else if(!CatHW_Async.isRedAlliance && CatHW_Async.isLeftAlliance){
+                robot.lights.setDefaultColor(RevBlinkinLedDriver.BlinkinPattern.HEARTBEAT_BLUE);
             }
 
 
@@ -129,33 +126,25 @@ public class MainAutonomous extends LinearOpMode
             /*
              * Telemetry while waiting for PLAY:
              */
-
-
-            telemetry.addData("Delay Timer: ", timeDelay);
-
-            if (robot.isRedAlliance && !robot.isLeftAlliance) {
-                telemetry.addData("Alliance: ", "Red Warehouse");
-            } else if(robot.isRedAlliance && robot.isLeftAlliance) {
-                telemetry.addData("Alliance: ", "Red Carousal");
-            } else if(!robot.isRedAlliance && !robot.isLeftAlliance){
-                telemetry.addData("Alliance: ", "Blue Carousal");
-            } else if(!robot.isRedAlliance && robot.isLeftAlliance){
-                telemetry.addData("Alliance: ", "Blue Warehouse");
-            }
-
-            telemetry.addData("Duck Pos: ", "%s", robot.eyes.getDuckPos().toString());
-
-
-            dashboardTelemetry.addData("Duck Pos:", "%s", robot.eyes.getDuckPos().toString());
-
-            telemetry.addData("Analysis Right", robot.eyes.pipeline.avg1GetAnalysis());
-            telemetry.addData("Analysis Middle", robot.eyes.pipeline.avg2GetAnalysis());
-            telemetry.addData("Analysis Left", robot.eyes.pipeline.avg3GetAnalysis());
-
             robot.drive.updateOdo();
             telemetry.addData("Pos","%.3f %.3f %.3f",robot.drive.realSense.getXPos(),robot.drive.realSense.getYPos(), robot.drive.realSense.getRotation());
-            dashboardTelemetry.update();
+            dashboardTelemetry.addData("Analysis Red", robot.eyes.pipeline.avgRed);
+            dashboardTelemetry.addData("Analysis Blue", robot.eyes.pipeline.avgBlue);
+            dashboardTelemetry.addData("Analysis Green", robot.eyes.pipeline.avgGreen);
+            dashboardTelemetry.addData("Position", robot.eyes.pipeline.avgValue);
+            telemetry.addData("Position", robot.eyes.pipeline.avgValue);
+            telemetry.addData("POS ","Is Left:%s", robot.isLeftAlliance);
+            if(robot.isLeftAlliance && robot.isRedAlliance){
+                telemetry.addData("Alliance","Red, Left");
+            }else if(!robot.isLeftAlliance && robot.isRedAlliance){
+                telemetry.addData("Alliance","Red, Right");
+            }else if(robot.isLeftAlliance && !robot.isRedAlliance){
+                telemetry.addData("Alliance","Blue, Left");
+            }else if(!robot.isLeftAlliance && !robot.isRedAlliance){
+                telemetry.addData("Alliance","Blue, Right");
+            }
 
+            dashboardTelemetry.update();
             telemetry.update();
 
 
@@ -173,247 +162,125 @@ public class MainAutonomous extends LinearOpMode
          * Runs after hit start:
          * DO STUFF FOR the OPMODE!!!
          */
-        robot.drive.realSense.resetPos();
         runningTime.reset();
-        robot.robotWait(timeDelay);
-
-        if(!robot.isRedAlliance && robot.isLeftAlliance){
-            blueLeft();
-        }else if(!robot.isRedAlliance && !robot.isLeftAlliance){
-            blueRight();
-        }else if(robot.isRedAlliance && !robot.isLeftAlliance){
-            redRight();
-
-
-        }else if(robot.isRedAlliance && robot.isLeftAlliance){
-            redLeft();
-
+        if(robot.isLeftAlliance){
+            left();
+        }else if(!robot.isLeftAlliance){
+            right();
         }
-}
-
-    public void blueLeft(){
-        CatHW_Vision.UltimateGoalPipeline.duckPosistion duckPos = robot.eyes.getDuckPos();
-        robot.drive.quickDrive(0,33,0,1,5);
-        robot.drive.quickDrive(10,38,-90,1,5);
-
-
-        switch(duckPos){
-            case NONE:
-                robot.jaws.setLiftThird(.8);
-                break;
-            case RIGHT:
-                robot.jaws.setLiftThird(.8);
-
-                break;
-            case MIDDLE:
-                robot.jaws.setLiftSecond(.8);
-                break;
-            case LEFT:
-                robot.jaws.setLiftFirst(.8);
-                break;
-        }
+    }
+    public void left(){
+        CatHW_Vision.UltimateGoalPipeline.conePosition conePos = robot.eyes.getConePos();
+        telemetry.addData("Position",conePos.toString());
+        telemetry.update();
+        robot.jaws.grabPos();
         robot.robotWait(1);
-        robot.jaws.dumpPos();
+        robot.jaws.setLiftMiddlePole(1);
+        robot.drive.quickDrive(3.5,8,0,1,5);
+        robot.drive.setTightTolerance();
+        //robot.drive.quickDrive(11,37,40,.3,5);
+        robot.drive.quickDrive(15,33,0,.25,5);
+
+        telemetry.addData("Pos","%.3f %.3f %.3f",robot.drive.realSense.getXPos(),robot.drive.realSense.getYPos(), robot.drive.realSense.getRotation());
+        telemetry.update();
         robot.robotWait(2);
-        robot.jaws.unDump();
-
-        robot.jaws.setIntakeLiftDown();
-
-        if(duckPos == CatHW_Vision.UltimateGoalPipeline.duckPosistion.RIGHT){
-            robot.drive.quickDrive(6,38,-90,1,2);
-
-        }
-
-
-        robot.drive.quickDrive(5,-2,-90,1,5);
-        robot.jaws.setLiftBottom(.5);
+        robot.jaws.unGrab();
+        robot.robotWait(2);
         robot.drive.setLooseTolerance();
-        robot.drive.quickDrive(-22,-2,-90,1,5);
-        while (runningTime.seconds() < 20) {
-            robot.jaws.setJawPower(.5);
-            robot.drive.quickIntakeDrive(.25,5);
 
-            robot.jaws.setIntakeLiftUp();
-
-            robot.drive.quickDrive(5, -2, -90, 1, 5);
-            robot.drive.setNormalTolerance();
-            robot.jaws.setJawPower(0);
-
-            robot.drive.quickDrive(10, 28, -90, 1, 5);
-            robot.jaws.setLiftThird(.8);
-            robot.drive.quickDrive(10, 38, -90, 1, 5);
-
-            robot.jaws.dumpPos();
-            robot.robotWait(2);
-            robot.jaws.unDump();
-            robot.jaws.setLiftBottom(.5);
-
-            robot.jaws.setIntakeLiftDown();
-            robot.drive.quickDrive(5, -2, -90, 1, 5);
-            robot.jaws.setLiftBottom(.5);
-            robot.drive.setLooseTolerance();
-            robot.drive.quickDrive(-22, -2, -90, 1, 5);
-        }
-
-
-
-
-
-    }
-    public void blueRight(){
-        CatHW_Vision.UltimateGoalPipeline.duckPosistion duckPos = robot.eyes.getDuckPos();
-        robot.drive.quickDrive(0,30,0,.9,5);
-        robot.drive.quickDrive(-4,44,90,.9,5);
-
-
-
-        switch(duckPos){
+        /*while (runningTime.seconds() < 20){
+            robot.
+        }*/
+        robot.jaws.setLiftBottom(1);
+        switch(conePos) {
             case NONE:
-                robot.jaws.setLiftThird(.5);
-                break;
             case RIGHT:
-                robot.jaws.setLiftThird(.5);
-
+                robot.drive.quickDrive(26, 27, 0, .5, 5);
                 break;
             case MIDDLE:
-                robot.jaws.setLiftSecond(.5);
+                robot.drive.quickDrive(4, 26, 0, .5, 5);
                 break;
             case LEFT:
-                robot.jaws.setLiftFirst(.5);
+                robot.drive.quickDrive(-22.5, 26, 0, .5, 6);
                 break;
         }
-        robot.robotWait(1.5);
-        robot.jaws.dumpPos();
         robot.robotWait(2);
-        robot.jaws.unDump();
 
-        robot.jaws.setLiftBottom(.5);
-        if(duckPos == CatHW_Vision.UltimateGoalPipeline.duckPosistion.RIGHT){
-            robot.drive.quickDrive(0,8,0,.9,5);
-            robot.drive.quickDrive(26,8,0,.9,5);
-        }else{
-            robot.drive.quickDrive(26,8,0,.9,5);
-        }
-
-        robot.carousel.rotateCarousel();
-        while(!robot.carousel.isDone()){
-            robot.robotWait(0.1);
-        }
-        robot.robotWait(.5);
-
-        robot.drive.quickDrive(26,32,90,.9,5);
-    }
-    public void redLeft(){
-
-        CatHW_Vision.UltimateGoalPipeline.duckPosistion duckPos = robot.eyes.getDuckPos();
-        if(duckPos == CatHW_Vision.UltimateGoalPipeline.duckPosistion.MIDDLE){
-            robot.drive.quickDrive(8,0,0,.9,5);
-            robot.drive.quickDrive(8,33,0,.9,5);
-            robot.drive.quickDrive(6,38,-90,.9,5);
-            robot.drive.quickDrive(11,38,-90,.9,5);
-
-        }else{
-            robot.drive.quickDrive(0,33,0,.9,5);
-            robot.drive.quickDrive(11,38,-90,.9,5);
-        }
-
-
-
-
-        switch(duckPos){
-            case NONE:
-                robot.jaws.setLiftThird(.5);
-
-                break;
-            case RIGHT:
-                robot.jaws.setLiftThird(.5);
-
-                break;
-            case MIDDLE:
-                robot.jaws.setLiftSecond(.5);
-                break;
-            case LEFT:
-                robot.jaws.setLiftFirst(.5);
-                break;
-        }
-        robot.robotWait(1.5);
-        robot.jaws.dumpPos();
-        robot.robotWait(2);
-        robot.jaws.unDump();
-        robot.robotWait(1);
-        robot.jaws.setLiftBottom(.5);
-        robot.drive.quickDrive(-26,11.5,90,.9,5);
-
-        robot.carousel.rotateCarousel();
-        while(!robot.carousel.isDone()){
-            robot.robotWait(0.1);
-        }
-        robot.robotWait(.5);
-        robot.drive.quickDrive(-26,32,90,.9,5);
-
-        robot.robotWait(5);
 
 
 
     }
-    public void redRight(){
+    public void right(){
+        CatHW_Vision.UltimateGoalPipeline.conePosition conePos = robot.eyes.getConePos();
+        int i = 1293;
 
-
-        CatHW_Vision.UltimateGoalPipeline.duckPosistion duckPos = robot.eyes.getDuckPos();
-
-        robot.drive.quickDrive(0,33,0,1,5);
-        robot.drive.quickDrive(-6,44,90,1,5);
-        switch(duckPos){
-            case NONE:
-                robot.jaws.setLiftThird(.5);
-                break;
-            case RIGHT:
-                robot.jaws.setLiftThird(.5);
-
-                break;
-            case MIDDLE:
-                robot.jaws.setLiftSecond(.5);
-                break;
-            case LEFT:
-                robot.jaws.setLiftFirst(.5);
-                break;
-        }
-        robot.jaws.waitForLift();
-        robot.jaws.dumpPos();
+        //Grabs Cone and lifts the lift
+        robot.jaws.grabPos();
         robot.robotWait(1);
-        robot.jaws.unDump();
-
-        robot.drive.quickDrive(-5,3.5,90,1,3); //drive to wall
-        robot.jaws.setLiftBottom(.5);
+        robot.jaws.setLiftMiddlePole(1);
         robot.drive.setLooseTolerance();
-        robot.jaws.setJawPower(.5);
-        robot.drive.quickDrive(30,4,90,1,5); //drive into warehouse
-        while (runningTime.seconds() < 20) {
 
+        //Drives to the medium junction and drops the cone
+        robot.drive.quickDrive(3.5,20,0,.5,5);
+        robot.drive.setTightTolerance();
+        robot.drive.quickDrive(-8,32.5,0,.25,5);
+        robot.robotWait(1);
+        robot.jaws.unGrab();
+        robot.jaws.setLiftBottom(1);
+        robot.robotWait(.5);
+        robot.drive.quickDrive(-8,29,0,.5,5);
 
+        //drives over to the stack of cones and picks one up
+        robot.drive.setNormalTolerance();
+        robot.drive.quickDrive(4,29,0,.5,5);
+        robot.drive.quickDrive(4,47,0,.5,5);
 
-            robot.drive.quickIntakeDrive(0.25, 5);
+        while(runningTime.seconds() < 20){
 
-            robot.jaws.setIntakeLiftUp();
+            robot.jaws.setLiftHeight(i);
+            robot.robotWait(.5);
+            robot.drive.setTightTolerance();
+            robot.drive.quickDrive(29,58,90,.25,5);
+            robot.robotWait(.25);
+            robot.jaws.grabPos();
+            robot.robotWait(.5);
+            robot.jaws.setLiftMiddlePole(1);
+
+            //drives over to drop cone onto short junction
+            robot.robotWait(1);
             robot.drive.setNormalTolerance();
-            robot.drive.quickDrive(-5, 2, 90, 1, 3);
-            robot.jaws.setJawPower(0);
-
-            robot.drive.quickDrive(-6, 44, 90, 1, 5);
-
-            robot.jaws.setLiftThird(.8);
-            robot.jaws.waitForLift();
-            robot.jaws.dumpPos();
-            robot.robotWait(2);
-            robot.jaws.unDump();
-            robot.drive.quickDrive(-5, 3, 90, 1, 3);
-            robot.jaws.setLiftBottom(.5);
-            robot.jaws.setIntakeLiftDown();
-
-            robot.jaws.setJawPower(.5);
-            robot.drive.quickDrive(35, 4, 90, 1, 3);
+            robot.drive.quickDrive(24,55,90,.3,5);
+            robot.jaws.setLiftLowPole(1);
+            robot.drive.quickDrive(24,55,180,.3,5);
+            robot.drive.setTightTolerance();
+            robot.drive.quickDrive(24,49,180,.2,5);
+            robot.robotWait(.5);
+            robot.jaws.unGrab();
+            if(runningTime.seconds() > 24){
+                robot.robotWait(.5);
+                break;
+            }
+            robot.drive.quickDrive(26,55,180,.3,5);
+            robot.jaws.setLiftLowPole(1);
+            robot.drive.quickDrive(26,55,90,.3,5);
+            i -= 149;
         }
+        robot.drive.quickDrive(26,53,180,.25,5);
+        robot.jaws.setLiftBottom(1);
 
+        robot.drive.setLooseTolerance();
+        /*switch(conePos) {
+            case NONE:
+            case RIGHT:
+                robot.drive.quickDrive(28, 27, 0, .5, 5);
+                break;
+            case MIDDLE:
+                robot.drive.quickDrive(6, 27, 0, .5, 5);
+                break;
+            case LEFT:
+                robot.drive.quickDrive(-23, 27, 0, 1, 6);
+                break;
+        }*/
 
 
     }

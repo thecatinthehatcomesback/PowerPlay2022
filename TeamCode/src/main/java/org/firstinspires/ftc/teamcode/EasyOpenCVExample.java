@@ -86,18 +86,18 @@ public class EasyOpenCVExample extends LinearOpMode
 
         while (opModeIsActive())
         {
-            telemetry.addData("Analysis Right", pipeline.avg1GetAnalysis());
-            telemetry.addData("Analysis Middle", pipeline.avg2GetAnalysis());
-            telemetry.addData("Analysis Left", pipeline.avg3GetAnalysis());
+            telemetry.addData("Analysis Right", pipeline.avg1RedGetAnalysis());
+            telemetry.addData("Analysis Middle", pipeline.avg2BlueAnalysis());
+            telemetry.addData("Analysis Left", pipeline.avg3GreenAnalysis());
             telemetry.addData("Analysis","Top Left: %d Top Right: %d", pipeline.getTopLeftAvg(),pipeline.getTopRightAvg());
 
 
 
             telemetry.addData("Position", pipeline.position);
             telemetry.update();
-            dashboardTelemetry.addData("Analysis Right", pipeline.avg1GetAnalysis());
-            dashboardTelemetry.addData("Analysis Middle", pipeline.avg2GetAnalysis());
-            dashboardTelemetry.addData("Analysis Left", pipeline.avg3GetAnalysis());
+            dashboardTelemetry.addData("Analysis Red", pipeline.avg1RedGetAnalysis());
+            dashboardTelemetry.addData("Analysis Blue", pipeline.avgBlue);
+            dashboardTelemetry.addData("Analysis Green", pipeline.avgGreen);
             dashboardTelemetry.addData("Analysis","Top Left: %d Top Right: %d", pipeline.getTopLeftAvg(),pipeline.getTopRightAvg());
             dashboardTelemetry.addData("robot pos", pipeline.robotPosition);
             dashboardTelemetry.addData("Position", pipeline.position);
@@ -139,7 +139,7 @@ public class EasyOpenCVExample extends LinearOpMode
         /*
          * The core values which define the location and size of the sample regions
          */
-        static final Point REGION1_TOPLEFT_ANCHOR_POINT = new Point(245,150);
+        static final Point REGION1_TOPLEFT_ANCHOR_POINT = new Point(100,100);
 
 
 
@@ -154,6 +154,8 @@ public class EasyOpenCVExample extends LinearOpMode
          * Working variables
          */
         Mat region1_Cb;
+        Mat region2_Cb;
+        Mat region3_Cb;
 
 
         Mat YCrCb = new Mat();
@@ -169,6 +171,8 @@ public class EasyOpenCVExample extends LinearOpMode
         int topRightAvg;
 
         Mat hsv = new Mat();
+        Mat hsv2 = new Mat();
+        Mat hsv3 = new Mat();
         Scalar redLowHSV1 = new Scalar(0, 100, 20); // lower bound HSV for red
         Scalar redHighHSV1 = new Scalar(10,255,255); // higher bound HSV for red
 
@@ -178,8 +182,8 @@ public class EasyOpenCVExample extends LinearOpMode
         Scalar blueLowHSV = new Scalar(100,150,0); // lower bound HSV for blue
         Scalar blueHighHSV = new Scalar(140,255,255); //higher bound HSV for blue
 
-        Scalar greenLowHSV = new Scalar(55,100,50); // lower bound HSV for green
-        Scalar greenHighHSV = new Scalar(65,220,255); //higher bound HSV for green
+        Scalar greenLowHSV = new Scalar(36, 25, 25); // lower bound HSV for green
+        Scalar greenHighHSV = new Scalar(70, 255,255); //higher bound HSV for green
 
 
 
@@ -199,7 +203,11 @@ public class EasyOpenCVExample extends LinearOpMode
         void inputToCb(Mat input)
         {
             Imgproc.cvtColor(input, hsv, Imgproc.COLOR_RGB2HSV);
+            Imgproc.cvtColor(input, hsv2, Imgproc.COLOR_RGB2HSV);
+            Imgproc.cvtColor(input, hsv3, Imgproc.COLOR_RGB2HSV);
             Core.extractChannel(hsv, Cr, 0);
+            Core.extractChannel(hsv2, Cr2, 0);
+            Core.extractChannel(hsv3, Cr3, 0);
 
         }
 
@@ -210,6 +218,8 @@ public class EasyOpenCVExample extends LinearOpMode
         {
             inputToCb(firstFrame);
             region1_Cb = Cr.submat(new Rect(right_region1_pointA, right_region1_pointB));
+            region2_Cb = Cr2.submat(new Rect(right_region1_pointA, right_region1_pointB));
+            region3_Cb = Cr3.submat(new Rect(right_region1_pointA, right_region1_pointB));
         }
 
         @Override
@@ -227,10 +237,12 @@ public class EasyOpenCVExample extends LinearOpMode
             Core.inRange(hsv, redLowHSV1, redHighHSV1,Cr);
             Core.inRange(hsv, redLowHSV2, redHighHSV2,Cr);
             avgRed = (int) Core.mean(region1_Cb).val[0];
-            Core.inRange(hsv,blueLowHSV,blueLowHSV,Cr);
-            avgBlue = (int) Core.mean(region1_Cb).val[0];
-            Core.inRange(hsv,greenHighHSV,greenLowHSV,Cr);
-            avgGreen = (int) Core.mean(region1_Cb).val[0];
+
+            Core.inRange(hsv,blueLowHSV,blueHighHSV,Cr2);
+            avgBlue = (int) Core.mean(region2_Cb).val[0];
+
+            Core.inRange(hsv,greenLowHSV,greenHighHSV,Cr3);
+            avgGreen = (int) Core.mean(region3_Cb).val[0];
 
 
 
@@ -261,11 +273,11 @@ public class EasyOpenCVExample extends LinearOpMode
             return input;
         }
 
-        public int avg1GetAnalysis()  {  return avgRed;             }
-        public int avg2GetAnalysis()  {  return avgBlue;             }
-        public int avg3GetAnalysis()  {  return avgGreen;             }
-        public int getTopLeftAvg()    {  return topLeftAvg;       }
-        public int getTopRightAvg()   {  return topRightAvg;      }
+        public int avg1RedGetAnalysis() {  return avgRed;      }
+        public int avg2BlueAnalysis()   {  return avgBlue;     }
+        public int avg3GreenAnalysis()  {  return avgGreen;    }
+        public int getTopLeftAvg()      {  return topLeftAvg;  }
+        public int getTopRightAvg()     {  return topRightAvg; }
 
 
 

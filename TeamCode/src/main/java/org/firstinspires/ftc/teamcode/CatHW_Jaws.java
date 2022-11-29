@@ -3,7 +3,6 @@ package org.firstinspires.ftc.teamcode;
 
 import android.util.Log;
 
-import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
@@ -27,13 +26,11 @@ public class CatHW_Jaws extends CatHW_Subsystem
 {
 
     // Motors: //
-    public CRServo intakeMotor = null;
-    public DcMotor intakeLift= null;
+    //public CRServo intakeMotor = null;
+    //public DcMotor intakeLift= null;
     public DcMotor lift = null;
-    public Servo dump = null;
-    public Servo capLR = null;
-    public Servo capVertical = null;
-    public CRServo capInOut = null;
+    public Servo claw = null;
+
     public ColorSensor intakeColor = null;
 
     public ElapsedTime liftTime = null;
@@ -47,9 +44,6 @@ public class CatHW_Jaws extends CatHW_Subsystem
 
     // Timers: //
 
-    public ElapsedTime capLRTimer = null;
-    public ElapsedTime capVerticalTimer = null;
-
     /* Constructor */
     public CatHW_Jaws(CatHW_Async mainHardware) {
         super(mainHardware);
@@ -61,14 +55,6 @@ public class CatHW_Jaws extends CatHW_Subsystem
     public void init() {
 
         // Define and initialize motors: //
-        intakeMotor = hwMap.crservo.get("intake");
-        intakeMotor.setDirection(DcMotorSimple.Direction.REVERSE);
-
-        intakeLift = hwMap.dcMotor.get("intake_lift");
-        intakeLift.setDirection(DcMotorSimple.Direction.FORWARD);
-        intakeLift.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        intakeLift.setTargetPosition(0);
-        intakeLift.setMode(DcMotor.RunMode.RUN_TO_POSITION);
 
 
         lift = hwMap.dcMotor.get("lift");
@@ -77,18 +63,9 @@ public class CatHW_Jaws extends CatHW_Subsystem
         lift.setTargetPosition(0);
         lift.setMode(DcMotor.RunMode.RUN_TO_POSITION);
 
-        capInOut = hwMap.crservo.get("in_out");
-        capInOut.setDirection(DcMotorSimple.Direction.REVERSE);
-        capLR = hwMap.servo.get("left_right");
-        capVertical = hwMap.servo.get("up_down");
-
-        dump = hwMap.servo.get("dump");
-        intakeColor = hwMap.colorSensor.get("intake_color");
-        intakeColor.enableLed(true);
+        claw = hwMap.servo.get("claw");
 
         liftTime = new ElapsedTime();
-        capLRTimer = new ElapsedTime();
-        capVerticalTimer = new ElapsedTime();
     }
 
 
@@ -110,56 +87,48 @@ public class CatHW_Jaws extends CatHW_Subsystem
             power = -0.8;
         }
 
-        intakeMotor.setPower(power);
-    }
-    public double getJawPower() {
-        return intakeMotor.getPower();
-    }
-
-    /**
-     * Turn off intake motor.
-     */
-    public void turnOffJaws() {
-        intakeMotor.setPower(0.0);
+        //intakeMotor.setPower(power);
     }
 
     //Lift mechanism
+
+    // TOP 6189
     public void setLiftBottom(double power){
         lift.setTargetPosition(0);
         lastLiftEncoder = -100;
         lift.setPower(power);
     }
-    public void setLiftFirst(double power){
-        lift.setTargetPosition(100);
+    public void setLiftGroundJunction(double power){
+        lift.setTargetPosition(790);
         lastLiftEncoder = -100;
         lift.setPower(power);
     }
-    public void setLiftSecond(double power){
-        lift.setTargetPosition(260);
+    public void setLiftLowPole(double power){
+        lift.setTargetPosition(3091);
         lastLiftEncoder = -100;
         lift.setPower(power);
     }
-    public void setLiftThird(double power){
-        lift.setTargetPosition(400);
+    public void setLiftMiddlePole(double power){
+        lift.setTargetPosition(4677);
         lastLiftEncoder = -100;
         lift.setPower(power);
     }
-    public void bumpLift(double bumpAmount) {
+    public void setLiftHighPole(double power){
+        lift.setTargetPosition(6189);
+        lastLiftEncoder = -100;
+        lift.setPower(power);
+    }
+    public void setLiftHeight(int height){
+        lift.setTargetPosition(height);
+    }
+    public void bumpLift(int bumpAmount) {
         if (bumpAmount > 0.5){
-            lift.setTargetPosition(4 + lift.getTargetPosition());
-            lift.setPower(0.4);
+            lift.setTargetPosition(bumpAmount + lift.getCurrentPosition());
+            lift.setPower(1);
         }else if(bumpAmount <-0.5){
-            lift.setTargetPosition(-4 + lift.getTargetPosition());
-            lift.setPower(0.4);
+            lift.setTargetPosition(bumpAmount + lift.getCurrentPosition());
+            lift.setPower(1);
         }
-    }
-
-    public void capUnloadElement(){
-        capLR.setPosition(.6);
-        capLRPos = .6;
-        capVertical.setPosition(.84);
-        capVerticalPos = .84;
-
     }
 
     public void setLiftPower(double power){
@@ -169,65 +138,11 @@ public class CatHW_Jaws extends CatHW_Subsystem
     //public void setDumpPos(double pos){
     //    dump.setPosition(pos);
     //}
-    public void dumpPos(){
-        dump.setPosition(0.8);
+    public void grabPos(){
+        claw.setPosition(.15 );
     }
-    public void unDump()  { dump.setPosition(0.3); }
+    public void unGrab()  { claw.setPosition(0); }
 
-    // Code for the intake lift
-    public void setIntakeLiftUp(){
-        intakeLift.setTargetPosition(65);
-        intakeLift.setPower(0.8);
-    }
-    public void setIntakeLiftHalf(){
-        intakeLift.setTargetPosition(40);
-        intakeLift.setPower(.8);
-    }
-    public void setIntakeLiftDown(){
-        intakeLift.setTargetPosition(0);
-        intakeLift.setPower(-0.8);
-    }
-    public boolean isIntakeLiftDown(){
-        if(intakeLift.getTargetPosition() > 10){
-            return false;
-        }
-        return true;
-    }
-    public void setCapPos(double lrPos, double vertPos){
-        capLRPos = lrPos;
-        capLR.setPosition(capLRPos);
-        capVerticalPos = vertPos;
-        capVertical.setPosition(capVerticalPos);
-
-
-    }
-    public void capLRAdjust(double adjustment){
-        if(capLRTimer.seconds() > 0.01) {
-            capLRPos += adjustment * Math.abs(adjustment)  * 0.01;
-            if(capLRPos > 1.0){
-                capLRPos = 1.0;
-            }else if(capLRPos < 0){
-                capLRPos = 0;
-            }
-            capLR.setPosition(capLRPos);
-            capLRTimer.reset();
-        }
-    }
-    public void capVerticalAdjust(double adjustment){
-        if(capVerticalTimer.seconds() > 0.01) {
-            capVerticalPos += adjustment * Math.abs(adjustment)  * 0.015;
-            if(capVerticalPos > 1.0){
-                capVerticalPos = 1.0;
-            }else if(capVerticalPos < 0){
-                capVerticalPos = 0;
-            }
-            capVertical.setPosition(capVerticalPos);
-            capVerticalTimer.reset();
-        }
-    }
-    public void setCapInOutPower(double power){
-        capInOut.setPower(power);
-    }
 
     //intake color sensor methods
     public boolean haveFreight() {
@@ -268,10 +183,6 @@ public class CatHW_Jaws extends CatHW_Subsystem
             lift.setPower(0);
         }
 
-        /* isDone stuff for CatHW_Jaws */
-        if (!intakeLift.isBusy()) {
-            return true;
-        }
         return false;
     }
 }

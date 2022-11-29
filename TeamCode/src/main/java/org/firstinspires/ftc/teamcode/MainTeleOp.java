@@ -51,7 +51,7 @@ public class MainTeleOp extends LinearOpMode
 
 
         // Initialize the hardware
-        robot.init(hardwareMap, this, false);
+        robot.init(hardwareMap, this);
 
         // Finished!  Now tell the driver...
         telemetry.addData("Status", "Initialized...  BOOM!");
@@ -124,12 +124,13 @@ public class MainTeleOp extends LinearOpMode
             }
 
             // Drive train speed control:
+
             if (gamepad1.left_bumper) {
-                driveSpeed = 1.00;
+                driveSpeed = 0.50;
             } else if (gamepad1.right_bumper) {
-                driveSpeed = 0.30;
+                driveSpeed = 0.25;
             } else {
-                driveSpeed = 0.70;
+                driveSpeed = 0.30;
             }
 
             double forward = -((Math.abs(gamepad1.right_stick_y) < 0.05) ? 0 : gamepad1.right_stick_y);
@@ -162,119 +163,51 @@ public class MainTeleOp extends LinearOpMode
                 robot.drive.setDrivePowers(leftFront, rightFront, leftBack, rightBack);
             }
 
-            if(gamepad1.x){
-                robot.carousel.rotateCarousel();
-            }
-
             //--------------------------------------------------------------------------------------
             // Driver 2 Controls:
             //--------------------------------------------------------------------------------------
-           // if (Math.abs(gamepad1.right_trigger - (gamepad1.left_trigger)) <= 0.05) {
 
-                if(gamepad2.left_bumper){
-                    robot.jaws.setJawPower(gamepad2.right_trigger - (gamepad2.left_trigger));
-                } else{
-                    robot.jaws.setJawPower(gamepad2.right_trigger - (gamepad2.left_trigger * 0.3));
-                }
-            //} else {
-            //    if(gamepad1.left_bumper){
-            //        robot.jaws.setJawPower(gamepad1.right_trigger-gamepad1.left_trigger);
-            //    }else{
-            //        robot.jaws.setJawPower(gamepad1.right_trigger-gamepad1.left_trigger * 0.5);
-            //    }
-            //}
-
-
-
-            if(gamepad2.left_bumper){
-                robot.jaws.setIntakeLiftDown();
-            }else if(gamepad2.right_bumper && !robot.jaws.halfIntakeLift){
-                robot.jaws.setIntakeLiftUp();
-            }else if(gamepad2.right_bumper && robot.jaws.halfIntakeLift){
-                robot.jaws.setIntakeLiftHalf();
-            }
-            robot.jaws.isDone(); //will shut off intake lift when done moving
-
-            if(robot.jaws.haveFreight() && robot.jaws.isIntakeLiftDown() && !robot.jaws.halfIntakeLift){
-                robot.jaws.setIntakeLiftUp();
-                robot.lights.blink(1, RevBlinkinLedDriver.BlinkinPattern.GREEN,1500 );
-
-
-            }else if(robot.jaws.haveFreight() && robot.jaws.isIntakeLiftDown() && robot.jaws.halfIntakeLift){
-                robot.jaws.setIntakeLiftHalf();
-                robot.lights.blink(1, RevBlinkinLedDriver.BlinkinPattern.GREEN,1500 );
-            }
-
-
-            if(gamepad2.share && !robot.jaws.halfIntakeLift && delayTimer.seconds() > 0.8){
-                robot.jaws.halfIntakeLift = true;
-                delayTimer.reset();
-            }else if(gamepad2.share && robot.jaws.halfIntakeLift && delayTimer.seconds() > 0.8){
-                robot.jaws.halfIntakeLift = false;
-                delayTimer.reset();
-            }
+            //lets gamepad 2 set the lift to all five heights
             if(gamepad2.dpad_up){
-                robot.jaws.setLiftThird(1);
+                robot.jaws.setLiftHighPole(1);
             }else if(gamepad2.dpad_left){
-                robot.jaws.setLiftSecond(1);
+                robot.jaws.setLiftMiddlePole(1);
             }else if(gamepad2.dpad_down){
-                robot.jaws.setLiftBottom(.8);
+                robot.jaws.setLiftGroundJunction(.8);
             } else if(gamepad2.ps) {
                 robot.jaws.lift.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
                 robot.jaws.lift.setMode(DcMotor.RunMode.RUN_TO_POSITION);
             } else if(gamepad2.dpad_right){
-                robot.jaws.setLiftFirst(.8);
+                robot.jaws.setLiftLowPole(1);
+            } else if(gamepad2.left_bumper){
+                robot.jaws.setLiftBottom(1);
             }
 
-            if(gamepad2.y){
-                robot.jaws.bumpLift(1);
-            }else if(gamepad2.a){
-                robot.jaws.bumpLift(-1);
+            //manually be able to move lift on both gamepad 1 and 2
+            if(gamepad2.y || gamepad1.y){
+                robot.jaws.bumpLift(180 );
+            }else if(gamepad2.a || gamepad1.a){
+                robot.jaws.bumpLift(-180);
             }
 
-            if(gamepad2.b){
-                robot.jaws.dumpPos();
+            //gamepad 2 can close the claw
+            if(gamepad2.right_trigger>0.1){
+                robot.jaws.grabPos();
             }else{
-                robot.jaws.unDump();
+                robot.jaws.unGrab();
             }
-
-            if(gamepad2.x){
-                robot.carousel.rotateCarousel();
-            }
-
-            robot.carousel.isDone(); //will check rotation and shut it off
-
-
-            //Capping Mechanism
-            robot.jaws.setCapInOutPower(-gamepad2.left_stick_y);
-            robot.jaws.capLRAdjust(gamepad2.right_stick_x);
-            robot.jaws.capVerticalAdjust(gamepad2.right_stick_y);
-
-            if(gamepad2.touchpad && delayTimer.seconds() > 0.1){
-                robot.jaws.capUnloadElement();
-            }
-
 
 
             //--------------------------------------------------------------------------------------
             // Telemetry Data:
             //--------------------------------------------------------------------------------------
-            telemetry.addData("Power", "LF %.2f RF %.2f LB %.2f RB %.2f", leftFront, rightFront,leftBack,rightBack);
+            telemetry.addData("Power", "LF %.2f RF %.2f LB %.2f RB %.2f", robot.drive.leftFrontMotor.getPower(), robot.drive.rightFrontMotor.getPower(),robot.drive.leftRearMotor.getPower(),robot.drive.rightRearMotor.getPower());
+            //telemetry.addData("Power", "LF %s RF %s LB %s RB %s", robot.drive.leftFrontMotor.getDirection().toString(), robot.drive.rightFrontMotor.getDirection().toString(),robot.drive.leftRearMotor.getDirection().toString(),robot.drive.rightRearMotor.getDirection().toString());
 
-            telemetry.addData("lift pos","Cur:%d target:%d",robot.jaws.lift.getCurrentPosition(), robot.jaws.lift.getTargetPosition());
-            telemetry.addData("Intake lift", "Cur:%d Target:%d",robot.jaws.intakeLift.getCurrentPosition(),robot.jaws.intakeLift.getTargetPosition());
+            telemetry.addData("lift pos","Cur:%d target:%d pow:%.2f",robot.jaws.lift.getCurrentPosition(), robot.jaws.lift.getTargetPosition(), robot.jaws.lift.getPower());
             telemetry.addData("Game Timer","%.2f",elapsedGameTime.time());
-            telemetry.addData("color","r:%3d g:%3d b:%3d a:%3d",robot.jaws.intakeColor.red(),
-                    robot.jaws.intakeColor.green(),robot.jaws.intakeColor.blue(), robot.jaws.intakeColor.alpha());
-            telemetry.addData("distance","volt %.3f inches %.1f",robot.drive.distanceSensor.getVoltage(), robot.drive.getDistance());
-            telemetry.addData("capper","LR %.3f Vert %.3f",robot.jaws.capLRPos, robot.jaws.capVerticalPos);
 
             telemetry.update();
-
-
-            //dashboardTelemetry.addData("PID set","%.5f  %.5f  %.5f  %.5f",RobotConstants.LAUNCH_PID.p,RobotConstants.LAUNCH_PID.i,RobotConstants.LAUNCH_PID.d,RobotConstants.LAUNCH_PID.f);
-            //dashboardTelemetry.addData("High","%4d ",2800);
-            //dashboardTelemetry.addData("Low","%4d ",1800);
             dashboardTelemetry.addData("Intake Lift Half","%b",robot.jaws.halfIntakeLift);
             dashboardTelemetry.update();
         }

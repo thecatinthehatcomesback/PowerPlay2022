@@ -24,8 +24,9 @@ public class CatHW_Async
      * red or blue alliance.
      */
 
-    public static boolean isRedAlliance = true;
+
     public static boolean isLeftAlliance = false;
+    public static boolean isRedAlliance = false;
 
 
     /** Local OpMode members. */
@@ -39,7 +40,8 @@ public class CatHW_Async
 
     CatHW_Vision eyes = null;
     CatHW_Lights lights = null;
-    CatHW_Carousel carousel = null;
+    CatHW_RealSense T265 = null;
+
 
 
 
@@ -57,7 +59,7 @@ public class CatHW_Async
      * @param theOpMode for Linear OpMode usage.
      * @throws InterruptedException in case of error.
      */
-    public void init(HardwareMap ahwMap, LinearOpMode theOpMode, boolean useVuforia)
+    public void init(HardwareMap ahwMap, LinearOpMode theOpMode)
             throws InterruptedException {
 
         // Save a reference to hardware map and opMode
@@ -71,16 +73,6 @@ public class CatHW_Async
         opMode.telemetry.update();
         jaws = new CatHW_Jaws(this);
         jaws.init();
-
-        opMode.telemetry.addData("Initialize", "Tail...");
-        opMode.telemetry.update();
-        //tail = new CatHW_Tail(this);
-        //tail.init();
-
-        opMode.telemetry.addData("Initialize", "Claw...");
-        opMode.telemetry.update();
-        //claw = new CatHW_Claw(this);
-        //claw.init();
 
         opMode.telemetry.addData("Initialize", "Launcher...");
         opMode.telemetry.update();
@@ -98,15 +90,13 @@ public class CatHW_Async
         opMode.telemetry.addData("Initialize", "Vision...");
         opMode.telemetry.update();
         eyes = new CatHW_Vision(this);
-        eyes.initVision(hwMap, useVuforia);
+        eyes.initVision(hwMap);
 
         opMode.telemetry.addData("Initialize", "All Done...  BOOM!");
         opMode.telemetry.update();
 
-        opMode.telemetry.addData("Initialize", "Carousel...");
-        opMode.telemetry.update();
-        carousel = new CatHW_Carousel(this);
-        carousel.init();
+
+
     }
 
     //----------------------------------------------------------------------------------------------

@@ -17,6 +17,7 @@ import com.arcrobotics.ftclib.geometry.Translation2d;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.spartronics4915.lib.T265Camera;
 
@@ -156,18 +157,18 @@ public class CatHW_DriveOdo extends CatHW_Subsystem
         rightFrontMotor = hwMap.dcMotor.get("right_front_motor");
         leftRearMotor = hwMap.dcMotor.get("left_rear_motor");
         rightRearMotor = hwMap.dcMotor.get("right_rear_motor");
-        distanceSensor = hwMap.analogInput.get("distance");
+        //distanceSensor = hwMap.analogInput.get("distance");
 
 
         // Define motor directions: //
         leftFrontMotor.setDirection(DcMotor.Direction.REVERSE);
         rightFrontMotor.setDirection(DcMotor.Direction.FORWARD);
-        leftRearMotor.setDirection(DcMotor.Direction.REVERSE);
+        leftRearMotor.setDirection(DcMotor.Direction.FORWARD);
         rightRearMotor.setDirection(DcMotor.Direction.FORWARD);
 
-        realSense = new CatHW_RealSense(mainHW);
-        realSense.init();
-        motionProfile = new CatMotionProfile();
+       realSense = new CatHW_RealSense(mainHW);
+       realSense.init();
+       motionProfile = new CatMotionProfile();
         // Define motor zero power behavior: //
         setDriveToBrake();
 
@@ -304,10 +305,10 @@ public class CatHW_DriveOdo extends CatHW_Subsystem
         // Power update Thread:
         if (isNonStop){
             //if the last drive was nonstop
-            motionProfile.setNonStopTarget(x, y, power, realSense.getXPos(), realSense.getYPos());
+           // motionProfile.setNonStopTarget(x, y, power, realSense.getXPos(), realSense.getYPos());
         }else {
             //if the last drive was normal
-            motionProfile.setTarget(x, y, power, realSense.getXPos(), realSense.getYPos());
+           // motionProfile.setTarget(x, y, power, realSense.getXPos(), realSense.getYPos());
 
         }
 
@@ -351,7 +352,7 @@ public class CatHW_DriveOdo extends CatHW_Subsystem
         isDone = false;
         targetPoints = points;
 
-        targetPoints.add(0, new CatType_CurvePoint(realSense.getXPos(), realSense.getYPos(),realSense.getRotation()));
+       // targetPoints.add(0, new CatType_CurvePoint(realSense.getXPos(), realSense.getYPos(),realSense.getRotation()));
         this.followRadius = followRadius;
         for(int i = 0; i<targetPoints.size(); i++){
             Log.d("catbot",String.format("Pursuit Point %.2f %.2f %.2f",targetPoints.get(i).x,targetPoints.get(i).y, targetPoints.get(i).theta ));
@@ -424,11 +425,11 @@ public class CatHW_DriveOdo extends CatHW_Subsystem
     public void turn(double theta, double timeoutS ){
         currentMethod = DRIVE_METHOD.TURN;
         timeout = timeoutS;
-        double currentTheta = realSense.getRotation();
-        while((theta - currentTheta) < -180){
+        //double currentTheta = realSense.getRotation();
+       // while((theta - currentTheta) < -180){
             theta += 360;
         }
-        while((theta - currentTheta) > 180){
+        /*while((theta - currentTheta) > 180){
             theta -= 360;
         }
         targetTheta = theta;
@@ -438,7 +439,7 @@ public class CatHW_DriveOdo extends CatHW_Subsystem
         prevzVal = realSense.getRotation();
         isNonStop = false;
         isDone = false;
-    }
+    }*/
 
     /**
      * Used to move the robot across the field.  The robot can also TURN while moving along the path
@@ -642,10 +643,10 @@ public class CatHW_DriveOdo extends CatHW_Subsystem
                 rightFrontMotor.setPower(rFrontPower * SF2);
                 leftRearMotor.setPower(lBackPower * SF2);
                 rightRearMotor.setPower(rBackPower * SF2);
-                if(movementTimer.seconds() > 0.5){
+                if(movementTimer.seconds() > 6){
                     movementTimer.reset();
                     double distance = Math.sqrt(Math.pow(prevX-getRobotPos.x,2) + Math.pow(prevY - getRobotPos.y,2) );
-                    if(distance<0.5){
+                    if(distance<.5){
                         keepDriving = false;
                         Log.d("catbot",String.format("no movement stop distance %.3f %.3f %.3f",distance,getRobotPos.x,getRobotPos.y));
                     }
@@ -672,7 +673,7 @@ public class CatHW_DriveOdo extends CatHW_Subsystem
                 double getX = realSense.getXPos();
                 double getTheta = realSense.getRotation();
 
-                if(movementTimer.seconds() > 0.2){
+                if(movementTimer.seconds() > 1){
                     movementTimer.reset();
                     double distance = Math.sqrt(Math.pow(prevX-getX,2) + Math.pow(prevY - getY,2) );
                     if(distance<0.5){
