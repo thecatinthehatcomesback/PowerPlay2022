@@ -61,6 +61,12 @@ public class CatHW_RealSense extends CatHW_Subsystem {
         return currentAngle;
     }
 
+    public double getRotationRadians(){
+        T265Camera.CameraUpdate up = slamra.getLastReceivedCameraUpdate();
+
+        return up.pose.getHeading();
+    }
+
     public double getXPos(){
         return xPos;
     }
@@ -85,7 +91,7 @@ public class CatHW_RealSense extends CatHW_Subsystem {
 
     }
     //returns an angle reduced to a range of -180 to +180
-    private double reduceAngle(double angle){
+    public double reduceAngle(double angle){
         while((angle > 180) || (angle < -180)){
             if(angle > 180){
                 angle = angle - 360;
